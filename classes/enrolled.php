@@ -22,16 +22,24 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../config.php');
-$PAGE->set_url(new moodle_url('/enrol/bulk_enrollment/index.php'));
-$PAGE->set_context(\context_system::instance());
-$PAGE->set_title("Student Bulk Enrollment");
+//moodleform is defined in formslib.php
+require_once("$CFG->libdir/formslib.php");
 
-$data = (object)[
-    'testdata' => "this is sent main page data testing for server lang",
-    "steps" => []
-];
+class enrolled extends moodleform {
 
-print_r($OUTPUT->header());
-print_r($OUTPUT->render_from_template('enrol_bulk_enrollment/index',$data));
-print_r($OUTPUT->footer());
+    //Add elements to form
+    public function definition() {
+        global $CFG;
+
+        $mform = $this->_form; // Don't forget the underscore!
+
+        $mform->addElement('text', 'email', get_string('email')); // Add elements to your form
+        $mform->setType('email', PARAM_NOTAGS);                   //Set type of element
+        $mform->setDefault('email', 'Please enter email');        //Default value
+
+    }
+    //Custom validation should be added here
+    function validation($data, $files) {
+        return array();
+    }
+}

@@ -45,5 +45,20 @@ defined('MOODLE_INTERNAL') || die();
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class enrol_bulk_enrollment extends enrol_plugin {
+
+
+    /**
+     * @param array $courses
+     * @return array
+     */
+    /*public function formatted_courses(array $courses): array
+    {
+        $res = [];
+        foreach ($courses as $k => $course){
+            $res[trim($course->idnumber) . $k] = $course;
+        }
+        ksort($res);
+        return $res;
+    }*/
     
 }
