@@ -25,23 +25,25 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link rel="stylesheet" type="text/css" href="/course/css/bulk_enrollment.css">
+<link rel="stylesheet" type="text/css" href="/enrol/bulk_enrollment/css/bulk_enrollment.css">
+<link rel="stylesheet" type="text/css" href="/enrol/bulk_enrollment/css/ladda.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.16.3/sweetalert2.min.css" />
 
-<form action="" method="POST">
+<form action="/enrol/bulk_enrollment/request_enrolled.php" method="POST" id="bulk_enrolled">
     <div class="row course-enrolment-section">
         <div class="col-md-6">
             <h4>Courses</h4>
             <div id="courses_list">
-                <input type="text" class="search" placeholder="Search...">
-                <input type="hidden" name="courses">
+                <input type="text" class="search" placeholder="Search..." />
+                <input type="hidden" name="courses" id="courses" />
 
                 <ul class="list">
                     {{#courses}}
-                    <li class="course-item" data-id="{{id}}" onclick="toggleCourse(this)">
-                        <p class="name">
-                            {{fullname}}
-                        </p>
-                    </li>
+                        <li class="course-item" data-id="{{id}}" onclick="toggleCourse(this)">
+                            <p class="name">
+                                {{fullname}}
+                            </p>
+                        </li>
                     {{/courses}}
                 </ul>
             </div>
@@ -50,43 +52,107 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
         <div class="col-md-6">
             <h4>Users</h4>
             <div id="users_list">
-                <input type="text" class="search" placeholder="Search...">
-                <input type="hidden" name="users">
+                <input type="text" class="search" placeholder="Search..." />
+                <input type="hidden" name="users" id="users" />
 
                 <ul class="list">
                     {{#students}}
-                    <li class="user-item student-{{id}} col-xs-12"
-                        data-id="{{id}}" data-email="{{email}}"
-                        data-name="{{firstname}} {{lastname}}"
-                        onclick="toggleUser(this)">
-                        <p class="name col-xs-5">
-                            {{firstname}} {{lastname}}
-                        </p>
-                        <p class="email col-xs-7">{{email}}</p>
-                        <p class="dept col-xs-12">
-                            {{department}} - {{idnumber}}
-                        </p>
-                    </li>
+                        <li class="user-item student-{{id}} col-xs-12"
+                            data-id="{{id}}" data-email="{{email}}"
+                            data-name="{{firstname}} {{lastname}}"
+                            onclick="toggleUser(this)">
+                            <p class="name col-xs-5">
+                                {{firstname}} {{lastname}}
+                            </p>
+                            <p class="email col-xs-7">{{email}}</p>
+                            <p class="dept col-xs-12">
+                                {{department}} - {{idnumber}}
+                            </p>
+                        </li>
                     {{/students}}
                 </ul>
             </div>
         </div>
-        <div class="col-md-12">
+        <div class="col-md-12" id="selected_users">
             <h3>Selected users</h3>
             <p id="selected-users-list-empty">No users selected</p>
             <ul class="selected-users-list">
 
             </ul>
         </div>
+        <br>
+        <div class="col-md-12" id="output_users" style="display: none;">
+            <h3>Submitted Result</h3>
+            <p id="selected-users-list-empty">No users selected</p>
+            <ul class="selected-users-list">
+
+            </ul>
+        </div>
     </div>
-    <button class="btn btn-primary pull-right" style="margin-top: 15px" type="submit">Submit</button>
+    <button class="btn btn-primary btn-lg pull-right ladda-button Large" id="bulk_enrol_btn" type="submit" data-style="expand-right" style="margin-top: 15px"><span class="ladda-label">Submit</span></button>
 </form>
 
-<script src="/theme/jquery.php/core/jquery-3.2.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
-
+<script src="/enrol/bulk_enrollment/js/spin.min.js"></script>
+<script src="/enrol/bulk_enrollment/js/ladda.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.16.3/sweetalert2.min.js"></script>
 <textarea id="api_std" hidden>{{api_std}}</textarea>
 <script type="text/javascript">
+
+    $(function () {
+        $("#bulk_enrolled").submit(function (e) {
+            e.preventDefault();
+            this.blur();
+
+            let l = Ladda.create(document.querySelector("#bulk_enrol_btn"));
+            l.start();
+
+            let form = new FormData(this);
+
+            let course = $("#courses").val();
+            let users = $("#users").val();
+
+            if (course && users){
+                $.ajax({
+                    url: "/enrol/bulk_enrollment/request_enrolled.php",
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    data: form,
+                    type: "POST",
+                    success: (res)=>{
+                        $("#output_users").html(res);
+                        $("#output_users").show();
+                        $("#selected_users").hide();
+                        setTimeout(()=>{
+                            l.stop();
+                        },500);
+                    },
+                    error: (err)=>{
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: "System Error ! error code: " + err.status,
+                        });
+                        setTimeout(()=>{
+                            l.stop();
+                        },1500);
+                    }
+                });
+            }else{
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Oops...',
+                    text: 'Please select any courses & students!',
+                });
+                setTimeout(()=>{
+                    l.stop();
+                },1500);
+            }
+        })
+    });
+
     var users_info = JSON.parse($("#api_std").val().trim());
 
     for (var i = 0; i < users_info.length; i++)

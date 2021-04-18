@@ -24,19 +24,22 @@
 
     require_once(dirname(__FILE__) . '/../../config.php');
 //    require_once($CFG->dirroot . '/enrol/bulk_enrollment/classes/enrolled.php');
+    require_once($CFG->dirroot . '/enrol/bulk_enrollment/classes/enrolhelper.php');
 
     if(!is_siteadmin()){
         redirect('/');
         exit();
     }
 
+    global $DB;
+    //    $form = new enrolled();
+    $enrol_helper = new enrolhelper();
+
     $PAGE->set_url(new moodle_url('/enrol/bulk_enrollment/enrolled.php'));
     $PAGE->set_context(\context_system::instance());
     $PAGE->set_title("Bulk Enrollment");
     $PAGE->set_pagelayout('standard');
     $PAGE->set_heading(get_string('pluginname','enrol_bulk_enrollment'));
-
-//    $form = new enrolled();
 
     $courses = get_courses();
     $res = [];
@@ -56,30 +59,7 @@
     }
 
     // get students information ums database
-    $api = "https://api.e-dhrubo.com/students/multiple_username_wise_std_details";
-    $curl = curl_init();
-    curl_setopt($curl, CURLOPT_URL, $api);
-    curl_setopt($curl, CURLOPT_POST, 1);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query([
-        "X-API-KEY" => "9e50f38559e4b248d3f19cbfa9f43def7f5121393f3f2ec06f3c5c0d57f0caa4",
-        "email" => implode(",",$emails)
-    ]));
-    curl_setopt($curl, CURLOPT_FOLLOWLOCATION, FALSE);
-    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
-    curl_setopt($curl, CURLOPT_TIMEOUT, 45);
-    curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
-    curl_setopt($curl, CURLOPT_USERPWD, "admin:1234");
-
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-    $result = curl_exec($curl);
-    $student_details_data = json_decode($result);
-    curl_close($curl);
-    $output = [];
-    if($student_details_data->status == 'success') {
-        $output = $student_details_data->message->StudentDetails;
-    }
-
+    $output = $enrol_helper->ums_std($emails);
 
     $context_data= (object)[
         "courses" => $res,
