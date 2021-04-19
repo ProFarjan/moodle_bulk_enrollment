@@ -44,23 +44,39 @@ defined('MOODLE_INTERNAL') || die();
  * @author  Eugene Venter - based on code by Petr Skoda, Martin Dougiamas, Martin Langhoff and others
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class enrol_bulk_enrollment extends enrol_plugin {
 
 
-    /**
-     * @param array $courses
-     * @return array
-     */
-    /*public function formatted_courses(array $courses): array
-    {
-        $res = [];
-        foreach ($courses as $k => $course){
-            $res[trim($course->idnumber) . $k] = $course;
-        }
-        ksort($res);
-        return $res;
-    }*/
+//class enrol_bulk_enrollment extends enrol_plugin {
+//
+//
+//    /**
+//     * @param array $courses
+//     * @return array
+//     */
+//    /*public function formatted_courses(array $courses): array
+//    {
+//        $res = [];
+//        foreach ($courses as $k => $course){
+//            $res[trim($course->idnumber) . $k] = $course;
+//        }
+//        ksort($res);
+//        return $res;
+//    }*/
+//
+//
+//
+//}
 
+function enrol_bulk_enrollment_extend_navigation(global_navigation $navigation){
+    if (!has_capability('moodle/site:config', context_system::instance())){
+        return;
+    }
 
-
+    $main_node = $navigation->add(get_string('pluginname','enrol_bulk_enrollment'),'/enrol/bulk_enrolment/');
+    $main_node->nodetype = 1;
+    $main_node->collapse = false;
+    $main_node->forceopen = true;
+    $main_node->isexpandable = false;
+    $main_node->showinflatnavigation = true;
+    $navigation->add_node($main_node);
 }
