@@ -1,0 +1,282 @@
+{{!
+This file is part of Moodle - http://moodle.org/
+
+Moodle is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Moodle is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template enrol_bulk_enrollment/enrolled
+
+
+    Example context (json):
+    {
+
+    }
+}}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="/enrol/bulk_enrollment/css/bulk_enrollment.css">
+<link rel="stylesheet" type="text/css" href="/enrol/bulk_enrollment/css/ladda.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.16.3/sweetalert2.min.css" />
+
+<form action="/enrol/bulk_enrollment/request_enrolled.php" method="POST" id="bulk_enrolled">
+    <div class="row course-enrolment-section">
+        <div class="col-md-6">
+            <h4>Courses</h4>
+            <div id="courses_list">
+                <input type="text" class="search" placeholder="Search..." />
+                <input type="hidden" name="courses" id="courses" />
+
+                <ul class="list">
+                    {{#courses}}
+                        <li class="course-item" data-id="{{id}}" onclick="toggleCourse(this)">
+                            <p class="name">
+                                {{fullname}}
+                            </p>
+                        </li>
+                    {{/courses}}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <h4>Users</h4>
+            <div id="users_list">
+                <input type="text" class="search" placeholder="Search..." />
+                <input type="hidden" name="users" id="users" />
+
+                <ul class="list">
+                    {{#students}}
+                        <li class="user-item student-{{id}} col-xs-12"
+                            data-id="{{id}}" data-email="{{email}}"
+                            data-name="{{firstname}} {{lastname}}"
+                            onclick="toggleUser(this)">
+                            <p class="name col-xs-5">
+                                {{firstname}} {{lastname}}
+                            </p>
+                            <p class="email col-xs-7">{{email}}</p>
+                            <p class="dept col-xs-12">
+                                {{department}} - {{idnumber}}
+                            </p>
+                        </li>
+                    {{/students}}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-12" id="selected_users">
+            <h3>Selected users</h3>
+            <p id="selected-users-list-empty">No users selected</p>
+            <ul class="selected-users-list">
+
+            </ul>
+        </div>
+        <br>
+        <div class="col-md-12" id="output_users" style="display: none;">
+            <h3>Submitted Result</h3>
+            <p id="selected-users-list-empty">No users selected</p>
+            <ul class="selected-users-list">
+
+            </ul>
+        </div>
+    </div>
+    <button class="btn btn-primary btn-lg pull-right ladda-button Large" id="bulk_enrol_btn" type="submit" data-style="expand-right" style="margin-top: 15px"><span class="ladda-label">Submit</span></button>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+<script src="/enrol/bulk_enrollment/js/spin.min.js"></script>
+<script src="/enrol/bulk_enrollment/js/ladda.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.16.3/sweetalert2.min.js"></script>
+<textarea id="api_std" hidden>{{api_std}}</textarea>
+<script type="text/javascript">
+
+    $(function () {
+        $("#bulk_enrolled").submit(function (e) {
+            e.preventDefault();
+            this.blur();
+
+            let l = Ladda.create(document.querySelector("#bulk_enrol_btn"));
+            l.start();
+
+            let form = new FormData(this);
+
+            let course = $("#courses").val();
+            let users = $("#users").val();
+
+            if (course && users){
+                $.ajax({
+                    url: "/enrol/bulk_enrollment/request_enrolled.php",
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    data: form,
+                    type: "POST",
+                    success: (res)=>{
+                        $("#output_users").html(res);
+                        $("#output_users").show();
+                        $("#selected_users").hide();
+                        setTimeout(()=>{
+                            l.stop();
+                        },500);
+                    },
+                    error: (err)=>{
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: "System Error ! error code: " + err.status,
+                        });
+                        setTimeout(()=>{
+                            l.stop();
+                        },1500);
+                    }
+                });
+            }else{
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Oops...',
+                    text: 'Please select any courses & students!',
+                });
+                setTimeout(()=>{
+                    l.stop();
+                },1500);
+            }
+        })
+    });
+
+    var users_info = JSON.parse($("#api_std").val().trim());
+
+    for (var i = 0; i < users_info.length; i++)
+    {
+        var user_info = users_info[i][0]
+
+        if(user_info)
+        {
+            console.log(user_info)
+            console.log($('.user-item[data-email="'+ user_info.username +'"]'));
+
+            $('.user-item[data-email="'+ user_info.username +'"]')
+                    .append(
+                            `<p class='info'>` +
+                            ((user_info.is_active) ? "Active" : "Inactive") +
+                            ", Shift - " + user_info.shift
+                            + "</p>")
+                    .append(
+                            `<p class='payment-info'>` +
+                            "Next Payment Amount - " + user_info.next_payment_amount + " BDT"
+                            + "</p>")
+        }
+    }
+
+    var options = {
+        valueNames: ['name']
+    };
+
+    var userList = new List('users_list', options);
+    console.log('list: ', userList)
+
+    option = {
+        valueNames: ['name']
+    }
+    var courseList = new List('courses_list', options);
+
+    $('#users_list .search').keydown(function(e)
+    {
+        if(e.keyCode == 13)
+        {
+            e.preventDefault()
+        }
+    })
+
+    let selected_users = []
+    function toggleUser(el)
+    {
+        var id =  el.getAttribute('data-id')
+        var email =  el.getAttribute('data-email')
+        var name = el.getAttribute('data-name')
+
+        el.classList.toggle('selected')
+
+        if(selected_users.includes(id))
+        {
+            let index = selected_users.indexOf(id)
+            selected_users.splice(index, 1)
+
+            $('.selected-user-item-' + id).remove()
+
+            updateSelectedUsersListEmptyMessage()
+        }
+        else
+        {
+            selected_users.push(id)
+
+            $('.selected-users-list').append(`
+				<li class="selected-user-item selected-user-item-`+ id +`">`
+                    + name + ` - `  + email +
+                    `<img class="selected-user-item-close" src="/course/icons/close.png">
+				</li>
+			`)
+
+            $('.selected-user-item-'+ id).click(function(e)
+            {
+                $('.selected-user-item-' + id).remove()
+
+                let index = selected_users.indexOf(id)
+                selected_users.splice(index, 1)
+
+                el.classList.remove('selected')
+
+                updateSelectedUsersListEmptyMessage()
+            })
+        }
+
+        let hidden_input = $('input[name="users"]');
+
+        hidden_input.val(selected_users.join(','))
+
+        updateSelectedUsersListEmptyMessage()
+    }
+
+    function updateSelectedUsersListEmptyMessage()
+    {
+        if(selected_users.length == 0)
+        {
+            $('#selected-users-list-empty').text('No users selected')
+        }
+        else
+        {
+            $("#selected-users-list-empty").text('');
+        }
+    }
+
+    var selected_courses = []
+    function toggleCourse(el)
+    {
+        var id =  el.getAttribute('data-id')
+
+        el.classList.toggle('selected')
+
+        if(selected_courses.includes(id))
+        {
+            let index = selected_courses.indexOf(id)
+            selected_courses.splice(index, 1)
+        }
+        else
+        {
+            selected_courses.push(id)
+        }
+
+        let hidden_input = $('input[name="courses"]');
+
+        hidden_input.val(selected_courses.join(','))
+    }
+</script>
