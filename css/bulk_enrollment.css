@@ -36,7 +36,7 @@
 #courses_list .list
 {
 	overflow-y: scroll;
-	background: white
+	background: white;
 	border-radius: 6px;
 }
 
