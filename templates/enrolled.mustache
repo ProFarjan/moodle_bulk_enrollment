@@ -65,9 +65,7 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                                 {{firstname}} {{lastname}}
                             </p>
                             <p class="email col-xs-7">{{email}}</p>
-                            <p class="dept col-xs-12">
-                                {{department}} - {{idnumber}}
-                            </p>
+                            <p class="dept col-xs-12"></p>
                         </li>
                     {{/students}}
                 </ul>
@@ -76,12 +74,12 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
         <div class="col-md-12" id="selected_users">
             <h3>Selected users</h3>
             <p id="selected-users-list-empty">No users selected</p>
-            <ul class="selected-users-list">
-
-            </ul>
+            <ul class="selected-users-list"></ul>
         </div>
-        <br>
-        <div class="col-md-12" id="output_users" style="display: none;">
+    </div>
+
+    <div class="row" style="margin-top: 16px;">
+        <div class="col-md-12" id="output_users" style="display: none;padding: 0;">
             <h3>Submitted Result</h3>
             <p id="selected-users-list-empty">No users selected</p>
             <ul class="selected-users-list">
@@ -89,7 +87,10 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
             </ul>
         </div>
     </div>
-    <button class="btn btn-primary btn-lg pull-right ladda-button Large" id="bulk_enrol_btn" type="submit" data-style="expand-right" style="margin-top: 15px"><span class="ladda-label">Submit</span></button>
+    <div style="text-align: center;">
+        <button class="btn btn-info btn-lg ladda-button Large" id="bulk_enrol_btn" type="submit" data-style="expand-right" style="margin-top: 15px"><span class="ladda-label">Verify</span></button>
+        <button class="btn btn-primary btn-lg ladda-button Large" id="bulk_enrol_btn_submit" type="submit" data-style="expand-right" style="margin-top: 15px;display: none"><span class="ladda-label">Submit</span></button>
+    </div>
 </form>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -99,13 +100,14 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.16.3/sweetalert2.min.js"></script>
 <textarea id="api_std" hidden>{{api_std}}</textarea>
 <script type="text/javascript">
-
+    let btn_txt = "bulk_enrol_btn";
+    let uri = "/enrol/bulk_enrollment/request_enrolled.php";
     $(function () {
         $("#bulk_enrolled").submit(function (e) {
             e.preventDefault();
             this.blur();
 
-            let l = Ladda.create(document.querySelector("#bulk_enrol_btn"));
+            let l = Ladda.create(document.querySelector("#"+btn_txt));
             l.start();
 
             let form = new FormData(this);
@@ -115,7 +117,7 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
             if (course && users){
                 $.ajax({
-                    url: "/enrol/bulk_enrollment/request_enrolled.php",
+                    url: uri,
                     cache: false,
                     contentType: false,
                     processData: false,
@@ -127,6 +129,10 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                         $("#selected_users").hide();
                         setTimeout(()=>{
                             l.stop();
+                            uri = "/enrol/bulk_enrollment/submit_enrolled.php";
+                            $("#"+btn_txt).hide();
+                            btn_txt = "bulk_enrol_btn_submit";
+                            $("#"+btn_txt).show();
                         },500);
                     },
                     error: (err)=>{

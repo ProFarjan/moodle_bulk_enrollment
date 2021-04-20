@@ -20,7 +20,7 @@
  * This plugin lets the user specify a "flatfile" (CSV) containing enrolment information.
  * On a regular cron cycle, the specified file is parsed and then deleted.
  *
- * @package    enrol_flatfile
+ * @package    enrol_bulk_enrollment
  * @copyright  2021 World University of Bangladesh (CIS)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -46,26 +46,14 @@ defined('MOODLE_INTERNAL') || die();
  */
 
 
-//class enrol_bulk_enrollment extends enrol_plugin {
-//
-//
-//    /**
-//     * @param array $courses
-//     * @return array
-//     */
-//    /*public function formatted_courses(array $courses): array
-//    {
-//        $res = [];
-//        foreach ($courses as $k => $course){
-//            $res[trim($course->idnumber) . $k] = $course;
-//        }
-//        ksort($res);
-//        return $res;
-//    }*/
-//
-//
-//
-//}
+class enrol_bulk_enrollment extends enrol_plugin {
+
+
+
+
+
+
+}
 
 function enrol_bulk_enrollment_extend_navigation(global_navigation $navigation){
     if (!has_capability('moodle/site:config', context_system::instance())){

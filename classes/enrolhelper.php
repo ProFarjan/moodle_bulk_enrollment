@@ -36,7 +36,7 @@ class enrolhelper {
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query([
             "X-API-KEY" => "9e50f38559e4b248d3f19cbfa9f43def7f5121393f3f2ec06f3c5c0d57f0caa4",
-            "email" => implode(",",$emails)
+            "email" => implode(",",$this->short_email($emails))
         ]));
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, FALSE);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
@@ -56,19 +56,33 @@ class enrolhelper {
     }
 
     /**
+     * @param array $emails
+     * @return array
+     */
+    private function short_email(array $emails){
+        $short_email = [];
+        foreach ($emails as $email){
+            $sm = explode($email);
+            $short_email[] = $sm[0];
+        }
+        return $short_email;
+    }
+
+    /**
      * @param $course_id
      * @param $userid
      * @param $roleid
+     * @param bool $check_enrollment
      * @param string $enrolmethod
      * @return array
      * @throws coding_exception
      * @throws dml_exception
      */
-    public function check_enrol($course_id, $userid, $roleid, $enrolmethod = 'manual') {
+    public function check_enrol($course, $user, $roleid, $check_enrollment = true, $enrolmethod = 'manual') {
         global $DB;
         $response = [];
-        $user = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
-        $course = $DB->get_record('course', array('id' => $course_id), '*', MUST_EXIST);
+        //$user = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
+        //$course = $DB->get_record('course', array('id' => $course_id), '*', MUST_EXIST);
         $context = context_course::instance($course->id);
         if (!is_enrolled($context, $user)) {
             $enrol = enrol_get_plugin($enrolmethod);
@@ -94,9 +108,13 @@ class enrolhelper {
                 }
                 $instance = $DB->get_record('enrol', array('id' => $instanceid));
             }
-            $enrol->enrol_user($instance, $userid, $roleid);
+            $status_value = "enrollable";
+            if ($check_enrollment){
+                $enrol->enrol_user($instance, $user->id, $roleid);
+                $status_value = "enrolled";
+            }
             $response = [
-                "status" => "enrolled",
+                "status" => $status_value,
                 "user" => $user,
                 "course" => $course,
             ];
@@ -115,18 +133,54 @@ class enrolhelper {
             global $DB;
             $courses = $_POST['courses'];
             $users = $_POST['users'];
-            $courses = explode(',', $courses);
-            $users = explode(',', $users);
+
+            $courses = $this->setID($DB->get_records_sql("SELECT * FROM {course} WHERE id IN ($courses)"));
+            $users = $this->setID($DB->get_records_sql("SELECT * FROM {user} WHERE deleted = 0 and id IN ($users)"));
 
             $res = [];
-            foreach ($courses as $course_id){
-                $plugin_instance = $DB->get_record("enrol", array('courseid'=> $course_id, 'enrol'=>'manual'));
-                foreach ($users as $user_id){
-                    $res[$course_id][] = $this->check_enrol($course_id,$user_id,$plugin_instance->roleid);
+            foreach ($courses as $course){
+                $plugin_instance = $DB->get_record("enrol", array('courseid'=> $course->id, 'enrol'=>'manual'));
+                foreach ($users as $user){
+                    $res[$course->id][] = $this->check_enrol($course,$user,$plugin_instance->roleid);
                 }
             }
             return $res;
         }
+    }
+
+    public function verify_enrollment($data){
+        if(isset($_POST) && isset($_POST['courses']) && isset($_POST['users'])){
+            global $DB;
+            $courses = $_POST['courses'];
+            $users = $_POST['users'];
+
+            $courses = $this->setID($DB->get_records_sql("SELECT * FROM {course} WHERE id IN ($courses)"));
+            $users = $this->setID($DB->get_records_sql("SELECT * FROM {user} WHERE deleted = 0 and id IN ($users)"));
+
+            $emails = $this->get_emails($users);
+            $api_data = $this->ums_std($emails);
+
+            $res = [];
+            foreach ($courses as $course){
+                $plugin_instance = $DB->get_record("enrol", array('courseid'=> $course->id, 'enrol'=>'manual'));
+                foreach ($users as $user){
+                    $res[$course->id][] = $this->check_enrol($course,$user,$plugin_instance->roleid,false);
+                }
+            }
+            return $res;
+        }
+    }
+
+    /**
+     * @param array $users
+     * @return array
+     */
+    private function get_emails(array $users){
+        $emails = [];
+        foreach ($users as $user){
+            $emails[] = $user->email;
+        }
+        return $emails;
     }
 
     public function pre($data){
@@ -140,6 +194,23 @@ class enrolhelper {
         print_r($data);
         print_r("</pre>");
         die();
+    }
+
+    /**
+     * @param $data
+     * @param $col
+     * @return array
+     */
+    private function setID($data,$col="id"){
+        $res = [];
+        if(count($data) == 0){
+            return $res;
+        }
+        foreach ($data as $k => $val){
+            $val = (array) $val;
+            $res[$val[$col]] = (object) $val;
+        }
+        return $res;
     }
 
 

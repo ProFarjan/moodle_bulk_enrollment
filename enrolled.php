@@ -59,7 +59,8 @@
     }
 
     // get students information ums database
-    $output = $enrol_helper->ums_std($emails);
+    //$output = $enrol_helper->ums_std($emails);
+    $output = [];
 
     $context_data= (object)[
         "courses" => $res,

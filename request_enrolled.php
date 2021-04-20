@@ -35,37 +35,39 @@
     $enrol_helper = new enrolhelper();
     $output = [];
     if (isset($_POST)){
-        $output = $enrol_helper->save_enrolled($_POST);
+        $output = $enrol_helper->verify_enrollment($_POST);
     }
 ?>
 
 
 <?php if (count($output) > 0): ?>
-
+<?php foreach ($output as $course_id => $data):?>
 <table class="table table-sm table-striped">
     <thead>
         <tr>
+            <th colspan="5" style="text-align: center;font-size: 22px;background: #eee;border-top: 3px solid #ddd;">
+                <?=($data[0]['course']->fullname);?>
+            </th>
+        </tr>
+        <tr>
             <th>SL</th>
-            <th>Course Title</th>
             <th>Name</th>
             <th>Email</th>
             <th>Status</th>
         </tr>
     </thead>
     <tbody>
-        <?php $i = 0;foreach ($output as $course_id => $data):?>
-            <?php foreach ($data as $k => $res):?>
-                <tr>
-                    <td><?=++$i;?></td>
-                    <td><?=$res['course']->fullname;?></td>
-                    <td><?=$res['user']->firstname. " " . $res['user']->lastname;?></td>
-                    <td><?=$res['user']->email;?></td>
-                    <td><?=$res['status'];?></td>
-                </tr>
-            <?php endforeach; ?>
+        <?php $i = 0;?>
+        <?php foreach ($data as $k => $res):?>
+            <tr>
+                <td><?=++$i;?></td>
+                <td><?=$res['user']->firstname. " " . $res['user']->lastname;?></td>
+                <td><?=$res['user']->email;?></td>
+                <td><?=$res['status'];?></td>
+            </tr>
         <?php endforeach; ?>
     </tbody>
 </table>
-
+<?php endforeach; ?>
 
 <?php endif ?>
