@@ -27,3 +27,15 @@ $string['enrol_bulk_enrollment:unenrol'] = 'Unenrol suspended users';
 $string['pluginname'] = 'Bulk Enrollment';
 $string['pluginname_desc'] = 'Bulk enrolment plugin synchronises all members with course participants.';
 
+$string['enrolled_navbar'] = 'Enrol';
+$string['api_heading'] = 'WUB UMS All API Settings';
+$string['api_description'] = 'Please World University of Bangladesh Update API Information.';
+$string['api_url'] = 'UMS API URL';
+$string['api_url_desc'] = 'Enter UMS API URL';
+$string['api_username'] = 'Username';
+$string['api_username_desc'] = 'Enter Username';
+$string['api_password'] = 'Password';
+$string['api_password_desc'] = 'Enter Password';
+$string['api_x_api_key'] = 'X-API-KEY';
+$string['api_x_api_key_desc'] = 'Enter X-API-KEY';
+

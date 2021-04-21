@@ -23,7 +23,7 @@
      */
 
     require_once(dirname(__FILE__) . '/../../config.php');
-//    require_once($CFG->dirroot . '/enrol/bulk_enrollment/classes/enrolled.php');
+    require_once($CFG->dirroot . '/enrol/bulk_enrollment/lib.php');
     require_once($CFG->dirroot . '/enrol/bulk_enrollment/classes/enrolhelper.php');
 
     if(!is_siteadmin()){
@@ -31,14 +31,17 @@
         exit();
     }
 
+    require_login();
+
     global $DB;
-    //    $form = new enrolled();
     $enrol_helper = new enrolhelper();
 
     $PAGE->set_url(new moodle_url('/enrol/bulk_enrollment/enrolled.php'));
     $PAGE->set_context(\context_system::instance());
     $PAGE->set_title("Bulk Enrollment");
     $PAGE->set_pagelayout('standard');
+    $PAGE->navbar->add(get_string("pluginname","enrol_bulk_enrollment"),"/enrol/bulk_enrollment/index.php");
+    $PAGE->navbar->add(get_string("enrolled_navbar","enrol_bulk_enrollment"),"/enrol/bulk_enrollment/enrolled.php");
     $PAGE->set_heading(get_string('pluginname','enrol_bulk_enrollment'));
 
     $courses = get_courses();

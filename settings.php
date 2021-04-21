@@ -17,26 +17,53 @@
 /**
  * Adds admin settings for the plugin.
  *
- * @package     enrol_bulk_enrollment
+ *
+ * @package    enrol_bulk_enrollment
  * @category    admin
- * @copyright   2021 World University of Bangladesh (CIS)
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2021 World University of Bangladesh (CIS)
+ * @license    https://license.elearning.com.bd/ GNU GPL v3 or later
+ * @author     CIS (https://cis.com/)
+ * @author     Farjan Hasan <farjan@wub.edu.bd>
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-/*if ($hassiteconfig) {
-    $ADMIN->add('enrolplugins', new admin_category('enrol_bulk_enrollment', new lang_string('pluginname', 'enrol_bulk_enrollment')));
-    $settingspage = new admin_settingpage('managelocalhelloworld', new lang_string('manage', 'local_helloworld'));
+if ($ADMIN->fulltree) {
+    $settings->add(new admin_setting_heading("enrol_bulk_enrollment_name","",get_string("pluginname_desc","enrol_bulk_enrollment")));
 
-    if ($ADMIN->fulltree) {
-        $settingspage->add(new admin_setting_configcheckbox(
-            'enrol_bulk_enrollment/bulk_enrollment',
-            new lang_string('showinnavigation', 'enrol_bulk_enrollment'),
-            new lang_string('showinnavigation_desc', 'enrol_bulk_enrollment'),
-            1
-        ));
-    }
+    // WUB UMS API SETUP SETTING
+    $settings->add(new admin_setting_heading('enrol_bulk_enrolment_api',
+        get_string('api_heading','enrol_bulk_enrollment'),
+        get_string('api_description','enrol_bulk_enrollment'),
+    ));
+    $settings->add(new admin_setting_configtext(
+       'enrol_bulk_enrollment/api_url',
+        get_string('api_url','enrol_bulk_enrollment'),
+        get_string('api_url_desc','enrol_bulk_enrollment'),
+        "https://api.e-dhrubo.com/students/multiple_username_wise_std_details"
+    ));
+    $settings->add(new admin_setting_configtext(
+        'enrol_bulk_enrollment/api_username',
+        get_string('api_username','enrol_bulk_enrollment'),
+        get_string('api_username_desc','enrol_bulk_enrollment'),
+        "admin"
+    ));
+    $settings->add(new admin_setting_configtext(
+        'enrol_bulk_enrollment/api_password',
+        get_string('api_password','enrol_bulk_enrollment'),
+        get_string('api_password_desc','enrol_bulk_enrollment'),
+        "1234"
+    ));
+    $settings->add(new admin_setting_configtext(
+        'enrol_bulk_enrollment/api_x_api_key',
+        get_string('api_x_api_key','enrol_bulk_enrollment'),
+        get_string('api_x_api_key_desc','enrol_bulk_enrollment'),
+        "9e50f38559e4b248d3f19cbfa9f43def7f5121393f3f2ec06f3c5c0d57f0caa4"
+    ));
+}
 
-    $ADMIN->add('enrolplugins', $settingspage);
-}*/
+if ($hassiteconfig) {
+    $ADMIN->add('courses', new admin_externalpage('enrol_bulk_enrollment',
+        get_string('pluginname', 'enrol_bulk_enrollment'),
+        new moodle_url('/enrol/bulk_enrollment/index.php')));
+}

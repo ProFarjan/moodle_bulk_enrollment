@@ -26,6 +26,7 @@ require_once(dirname(__FILE__) . '/../../config.php');
 $PAGE->set_url(new moodle_url('/enrol/bulk_enrollment/index.php'));
 $PAGE->set_context(\context_system::instance());
 $PAGE->set_title("Student Bulk Enrollment");
+$PAGE->navbar->add(get_string("pluginname","enrol_bulk_enrollment"),"/enrol/bulk_enrollment/index.php");
 
 $data = (object)[
     'testdata' => "this is sent main page data testing for server lang",
