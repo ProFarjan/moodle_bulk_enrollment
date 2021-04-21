@@ -29,4 +29,4 @@ $plugin->requires  = 2017110800;        // Requires this Moodle version
 $plugin->component = 'enrol_bulk_enrollment';    // Full name of the plugin (used for diagnostics)
 
 $plugin->cron = 0;
-$plugin->release = '1.0';
+$plugin->release = 'v1.0.0';

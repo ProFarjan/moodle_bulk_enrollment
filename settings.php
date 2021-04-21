@@ -32,10 +32,10 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading("enrol_bulk_enrollment_name","",get_string("pluginname_desc","enrol_bulk_enrollment")));
 
     // WUB UMS API SETUP SETTING
-    $settings->add(new admin_setting_heading('enrol_bulk_enrolment_api',
+    /*$settings->add(new admin_setting_heading('enrol_bulk_enrolment_api',
         get_string('api_heading','enrol_bulk_enrollment'),
-        get_string('api_description','enrol_bulk_enrollment'),
-    ));
+        get_string('api_description','enrol_bulk_enrollment')
+    ));*/
     $settings->add(new admin_setting_configtext(
        'enrol_bulk_enrollment/api_url',
         get_string('api_url','enrol_bulk_enrollment'),

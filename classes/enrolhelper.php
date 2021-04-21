@@ -29,28 +29,35 @@ class enrolhelper {
      * @return array
      */
     public function ums_std(array $emails){
+        $api_url = get_config('enrol_bulk_enrollment','api_url');
+        $api_username = get_config('enrol_bulk_enrollment','api_username');
+        $api_password = get_config('enrol_bulk_enrollment','api_password');
+        $api_x_api_key = get_config('enrol_bulk_enrollment','api_x_api_key');
+
         $output = [];
-        $api = "https://api.e-dhrubo.com/students/multiple_username_wise_std_details";
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $api);
-        curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query([
-            "X-API-KEY" => "9e50f38559e4b248d3f19cbfa9f43def7f5121393f3f2ec06f3c5c0d57f0caa4",
-            "email" => implode(",",$this->short_email($emails))
-        ]));
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, FALSE);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 45);
-        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
-        curl_setopt($curl, CURLOPT_USERPWD, "admin:1234");
+        if ($api_url && $api_x_api_key){
+            $api = $api_url;
+            $curl = curl_init();
+            curl_setopt($curl, CURLOPT_URL, $api);
+            curl_setopt($curl, CURLOPT_POST, 1);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query([
+                "X-API-KEY" => $api_x_api_key,
+                "email" => implode(",",$this->short_email($emails))
+            ]));
+            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, FALSE);
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 45);
+            curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
+            curl_setopt($curl, CURLOPT_USERPWD, "$api_username:$api_password");
 
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
-        $result = curl_exec($curl);
-        $student_details_data = json_decode($result);
-        curl_close($curl);
-        if($student_details_data->status == 'success') {
-            $output = $student_details_data->message->StudentDetails;
+            $result = curl_exec($curl);
+            $student_details_data = json_decode($result);
+            curl_close($curl);
+            if($student_details_data->status == 'success') {
+                $output = $student_details_data->message->StudentDetails;
+            }
         }
         return $output;
     }
