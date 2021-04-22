@@ -44,25 +44,11 @@
     $PAGE->set_heading(get_string('pluginname','enrol_bulk_enrollment'));
 
     $courses_category = $enrol_helper->convert_arr($DB->get_records('course_categories'));
-
-    $program_batch = $enrol_helper->get_program();
-
-
-    $all_users = $DB->get_records("user", ['deleted' => '0', 'suspended' => 0]);
-    $students = $emails = [];
-    foreach ($all_users as $user){
-        if(!is_siteadmin($user->id) && !isguestuser($user->id)){
-            $emails[] = $user->email;
-            $students[] = (array) $user;
-        }
-    }
-
+    $programs = $enrol_helper->get_program();
 
     $context_data= (object)[
-        "program_id" => [],
-        "batch_id" => [],
-        "students" => $students,
         "courses_category" => $courses_category,
+        "programs" => $programs,
     ];
 
     print_r($OUTPUT->header());

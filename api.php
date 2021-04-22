@@ -39,6 +39,10 @@
         $output = $enrol_helper->get_courses($_POST);
     }
 
+    if (isset($_POST['program_id']) && !empty($_POST['program_id']) && ($_SERVER['REQUEST_METHOD'] == 'POST')){
+        $output = $enrol_helper->get_batches($_POST['program_id']);
+    }
+
     echo json_encode($output);
 
 ?>

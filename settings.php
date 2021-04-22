@@ -70,13 +70,13 @@ if ($ADMIN->fulltree) {
         'enrol_bulk_enrollment/api_url_programs',
         get_string('api_url_programs','enrol_bulk_enrollment'),
         get_string('api_url_programs_desc','enrol_bulk_enrollment'),
-        "https://api.e-dhrubo.com/students/batches/"
+        "https://api.e-dhrubo.com/students/programs"
     ));
     $settings->add(new admin_setting_configtext(
         'enrol_bulk_enrollment/api_url_batch',
         get_string('api_url_batch','enrol_bulk_enrollment'),
         get_string('api_url_batch_desc','enrol_bulk_enrollment'),
-        "https://api.e-dhrubo.com/students/programs"
+        "https://api.e-dhrubo.com/students/batches/"
     ));
 }
 

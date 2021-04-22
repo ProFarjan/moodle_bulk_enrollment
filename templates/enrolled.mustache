@@ -36,15 +36,16 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 <form action="/enrol/bulk_enrollment/request_enrolled.php" method="POST" id="bulk_enrolled">
     <div class="row course-enrolment-section">
         <div class="col-md-6">
-            <h4>Courses</h4>
-
-            <div style="margin-bottom: 10px;">
-                <select class="courses_category select2" id="courses_category" data-placeholder="Choose Course Category">
-                    <option value=""></option>
-                    {{#courses_category}}
-                    <option value="{{id}}">{{name}}</option>
-                    {{/courses_category}}
-                </select>
+            <div style="margin: 45px 0;">
+                <label for="courses_category" style="width: 100%;">
+                    Select Any Courses
+                    <select class="courses_category select2" id="courses_category" data-placeholder="Choose Course Category">
+                        <option value=""></option>
+                        {{#courses_category}}
+                        <option value="{{id}}">{{name}}</option>
+                        {{/courses_category}}
+                    </select>
+                </label>
                 <div style="text-align: center;">
                     <button class="btn btn-info ladda-button" data-color="blue" data-size="xs" type="button" id="search_courses" data-style="zoom-in" style="margin-top: 10px;"><label class="ladda-label">Search</label></button>
                 </div>
@@ -60,24 +61,26 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
         </div>
 
         <div class="col-md-6">
-            <h4>Users</h4>
+            <div style="margin: 10px;">
+                <label for="program_id" style="width: 100%;">
+                    Select Any Program
+                    <select class="program_id select2" id="program_id" data-placeholder="Choose Program">
+                        <option value=""></option>
+                        {{#programs}}
+                        <option value="{{id}}">{{label}}</option>
+                        {{/programs}}
+                    </select>
+                </label>
 
-            <div style="margin-bottom: 10px;">
-                <select class="program_id" id="program_id" data-placeholder="Choose Program">
-                    <option value=""></option>
-                    {{#program_id}}
-                        <option value="{{id}}">{{name}}</option>
-                    {{/program_id}}
-                </select>
-
-                <select class="batch_id" id="batch_id" data-placeholder="Choose Batch">
-                    <option value=""></option>
-                    {{#batch_id}}
-                        <option value="{{id}}">{{name}}</option>
-                    {{/batch_id}}
-                </select>
-
-                <button class="btn btn-info ladda-button" data-color="blue" data-size="xs" type="button" id="search_courses" data-style="zoom-in" style="margin-top: 10px;"><label class="ladda-label">Search</label></button>
+                <label for="batch_id" style="width: 100%;">
+                    Select Any Batches
+                    <select class="batch_id select2" id="batch_id" data-placeholder="Choose Batch">
+                        <option value=""></option>
+                    </select>
+                </label>
+                <div style="text-align: center;">
+                    <button class="btn btn-info ladda-button" data-color="blue" data-size="xs" type="button" id="search_courses" data-style="zoom-in" style="margin-top: 10px;"><label class="ladda-label">Search</label></button>
+                </div>
             </div>
 
             <div id="users_list">
@@ -86,7 +89,7 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                 <input type="hidden" name="users" id="users" />
 
                 <ul class="list">
-                    {{#students}}
+                    <!--{{#students}}
                         <li class="user-item student-{{id}} col-xs-12"
                             data-id="{{id}}" data-email="{{email}}"
                             data-name="{{firstname}} {{lastname}}"
@@ -97,7 +100,7 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                             <p class="email col-xs-7">{{email}}</p>
                             <p class="dept col-xs-12"></p>
                         </li>
-                    {{/students}}
+                    {{/students}}-->
                 </ul>
             </div>
         </div>
@@ -151,9 +154,41 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
     let courseList = new List('courses_list', options_course_list);
 
     $(function () {
-        $('.select2').select2({'width': '100%'});
-        $('.program_id').select2({'width': '100%'});
-        $('.batch_id').select2({'width': '81%'});
+        $('.select2').select2({
+            theme: "classic",
+            width: '100%',
+        });
+        $('#program_id').on('select2:select', function (e) {
+            let obj = e.params.data;
+            $.ajax({
+                url: '/enrol/bulk_enrollment/api.php',
+                method: 'POST',
+                data: {
+                    program_id: obj.id,
+                },
+                success: function (res) {
+                    if (res){
+                        let bs = $('#batch_id');
+                        let batches = JSON.parse(res);
+                        for (let batch of batches){
+                            const option = new Option(batch.batch_title,batch.batch_title,true,true);
+                            bs.append(option);
+                        }
+                        bs.trigger('change');
+                    }
+                },
+                error: function (err) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "System Error!! Error Code: ". err.status,
+                    });
+                }
+            });
+        });
+
+
+
         $("#bulk_enrolled").submit(function (e) {
             e.preventDefault();
             this.blur();

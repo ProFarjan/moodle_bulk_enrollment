@@ -57,7 +57,7 @@ class enrolhelper {
             $student_details_data = json_decode($result);
             curl_close($curl);
 
-            //$this->dd($student_details_data);
+            $this->dd($student_details_data);
             if($student_details_data->status == 'success') {
                 $output = $student_details_data->message->StudentDetails;
             }
@@ -270,18 +270,27 @@ class enrolhelper {
         $api_url_programs = get_config('enrol_bulk_enrollment','api_url_programs');
         $ums_program = $this->setID($this->ums($api_url_programs),"id");
         foreach ($ums_users as $user){
-            $res['program'][$user->program_id] = [
+            $res[$user->program_id] = [
                 "id" => $user->program_id,
                 "label" => $user->program_id,
                 "program" => null,
             ];
             if (array_key_exists($user->program_id,$ums_program)){
-                $res['program'][$user->program_id]['label'] = $ums_program[$user->program_id]->title;
-                $res['program'][$user->program_id]['program'] = $ums_program[$user->program_id];
+                $res[$user->program_id]['label'] = $ums_program[$user->program_id]->title;
+                $res[$user->program_id]['program'] = $ums_program[$user->program_id];
             }
         }
-        $this->dd();
+        sort($res);
         return $res;
+    }
+
+    public function get_batches($program_id){
+        $api_url_batch = get_config('enrol_bulk_enrollment','api_url_batch');
+        if (substr($api_url_batch,-1) != '/'){
+            $api_url_batch .= '/';
+        }
+        $api_url_batch .= $program_id;
+        return $this->ums($api_url_batch);
     }
 
     private function ums($api){
