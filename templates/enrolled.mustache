@@ -28,20 +28,26 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 <link rel="stylesheet" type="text/css" href="/enrol/bulk_enrollment/css/ladda.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.16.3/sweetalert2.min.css" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
+<style>
+    .ladda-button[data-size="xs"] {
+        padding: 0px 8px !important;
+    }
+</style>
 <form action="/enrol/bulk_enrollment/request_enrolled.php" method="POST" id="bulk_enrolled">
     <div class="row course-enrolment-section">
         <div class="col-md-6">
             <h4>Courses</h4>
 
             <div style="margin-bottom: 10px;">
-                <select class="courses_category" data-placeholder="Choose Course Category">
+                <select class="courses_category select2" id="courses_category" data-placeholder="Choose Course Category">
                     <option value=""></option>
                     {{#courses_category}}
-                    <option value="WY">{{name}}</option>
+                    <option value="{{id}}">{{name}}</option>
                     {{/courses_category}}
                 </select>
-                <button class="btn btn-sm btn-info" type="button">Search</button>
+                <div style="text-align: center;">
+                    <button class="btn btn-info ladda-button" data-color="blue" data-size="xs" type="button" id="search_courses" data-style="zoom-in" style="margin-top: 10px;"><label class="ladda-label">Search</label></button>
+                </div>
             </div>
 
             <div id="courses_list">
@@ -49,21 +55,33 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                 <input type="text" class="search" placeholder="Search..." />
                 <input type="hidden" name="courses" id="courses" />
 
-                <ul class="list">
-                    {{#courses}}
-                        <li class="course-item" data-id="{{id}}" onclick="toggleCourse(this)">
-                            <p class="name">
-                                {{fullname}} - ({{shortname}})
-                            </p>
-                        </li>
-                    {{/courses}}
-                </ul>
+                <ul class="list" id="list_courses"></ul>
             </div>
         </div>
 
         <div class="col-md-6">
             <h4>Users</h4>
+
+            <div style="margin-bottom: 10px;">
+                <select class="program_id" id="program_id" data-placeholder="Choose Program">
+                    <option value=""></option>
+                    {{#program_id}}
+                        <option value="{{id}}">{{name}}</option>
+                    {{/program_id}}
+                </select>
+
+                <select class="batch_id" id="batch_id" data-placeholder="Choose Batch">
+                    <option value=""></option>
+                    {{#batch_id}}
+                        <option value="{{id}}">{{name}}</option>
+                    {{/batch_id}}
+                </select>
+
+                <button class="btn btn-info ladda-button" data-color="blue" data-size="xs" type="button" id="search_courses" data-style="zoom-in" style="margin-top: 10px;"><label class="ladda-label">Search</label></button>
+            </div>
+
             <div id="users_list">
+                <hr/>
                 <input type="text" class="search" placeholder="Search..." />
                 <input type="hidden" name="users" id="users" />
 
@@ -83,6 +101,7 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                 </ul>
             </div>
         </div>
+
         <div class="col-md-12" id="selected_users">
             <h3>Selected users</h3>
             <p id="selected-users-list-empty">No users selected</p>
@@ -116,10 +135,25 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 <script type="text/javascript">
     let btn_txt = "bulk_enrol_btn";
     let uri = "/enrol/bulk_enrollment/request_enrolled.php";
+
+    let options = {
+        valueNames: ['name']
+    };
+    let options_course_list = {
+        valueNames: [
+            'fullname',
+            'shortname',
+            { data: ['id'] },
+        ],
+        item: '<li class="course-item" onclick="toggleCourse(this)"><span class="fullname"></span> - (<span class="shortname"></span>)</li>'
+    };
+    let userList = new List('users_list', options);
+    let courseList = new List('courses_list', options_course_list);
+
     $(function () {
-        $('.courses_category').select2({
-            'width': '78%',
-        });
+        $('.select2').select2({'width': '100%'});
+        $('.program_id').select2({'width': '100%'});
+        $('.batch_id').select2({'width': '81%'});
         $("#bulk_enrolled").submit(function (e) {
             e.preventDefault();
             this.blur();
@@ -174,53 +208,64 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                 },1500);
             }
         })
+        $("#search_courses").click(function(){
+            let l = Ladda.create(this);
+            l.start();
+            let category = $("#courses_category").val().trim();
+            if (category){
+                $.ajax({
+                    url: "/enrol/bulk_enrollment/api.php",
+                    data: {'category_id':category},
+                    method: 'POST',
+                    success: (res)=>{
+                        if (res){
+                            let courses = JSON.parse(res);
+                            let courses_fm_list = [];
+                            for (let i in courses){
+                                let course = courses[i];
+                                courses_fm_list.push({
+                                    fullname: course.fullname,
+                                    shortname: course.shortname,
+                                    id: course.id,
+                                });
+                            }
+                            courseList.add(courses_fm_list);
+                            $("#courses_category").find(':selected').attr('disabled','disabled');
+                            $("#courses_category").val("").trigger('change');
+                        }
+                        l.stop();
+                    },
+                    error: (err)=>{
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: "System Error!! Error Code: ". err.status,
+                        });
+                        setTimeout(()=>{
+                            l.stop();
+                        },1000);
+                    }
+                });
+            }else{
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'empty...',
+                    text: "Please Select Any Course Category",
+                });
+                setTimeout(()=>{
+                    l.stop();
+                },1000);
+            }
+        });
     });
 
-    var users_info = JSON.parse($("#api_std").val().trim());
 
-    for (var i = 0; i < users_info.length; i++)
-    {
-        var user_info = users_info[i][0]
-
-        if(user_info)
-        {
-            console.log(user_info)
-            console.log($('.user-item[data-email="'+ user_info.username +'"]'));
-
-            $('.user-item[data-email="'+ user_info.username +'"]')
-                    .append(
-                            `<p class='info'>` +
-                            ((user_info.is_active) ? "Active" : "Inactive") +
-                            ", Shift - " + user_info.shift
-                            + "</p>")
-                    .append(
-                            `<p class='payment-info'>` +
-                            "Next Payment Amount - " + user_info.next_payment_amount + " BDT"
-                            + "</p>")
-        }
-    }
-
-    var options = {
-        valueNames: ['name']
-    };
-
-    var userList = new List('users_list', options);
-    console.log('list: ', userList)
-
-    option = {
-        valueNames: ['name']
-    }
-    var courseList = new List('courses_list', options);
-
-    $('#users_list .search').keydown(function(e)
-    {
-        if(e.keyCode == 13)
-        {
+    $('#users_list .search').keydown(function(e){
+        if(e.keyCode == 13){
             e.preventDefault()
         }
     })
-
-    let selected_users = []
+    let selected_users = [];
     function toggleUser(el)
     {
         var id =  el.getAttribute('data-id')
@@ -281,7 +326,7 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
         }
     }
 
-    var selected_courses = []
+    var selected_courses = [];
     function toggleCourse(el)
     {
         var id =  el.getAttribute('data-id')

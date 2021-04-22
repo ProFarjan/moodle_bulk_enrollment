@@ -40,50 +40,24 @@ class enrolhelper {
             $email_all = $this->short_email($emails);
             $api = $api_url;
 
-            /*$curl = curl_init();
-            curl_setopt($curl, CURLOPT_URL, $api);
-            curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query([
-                "X-API-KEY" => $api_x_api_key,
-                "email" => implode(",",$email_all)
-            ]));
-
-            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, FALSE);
-            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 45);
-            curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
-            curl_setopt($curl, CURLOPT_USERPWD, "$api_username:$api_password");
-
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-            $result = curl_exec($curl);
-            $student_details_data = json_decode($result);
-            curl_close($api_url);*/
-
             $curl = curl_init();
 
             curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, "X-API-KEY=9e50f38559e4b248d3f19cbfa9f43def7f5121393f3f2ec06f3c5c0d57f0caa4&email=" . implode(',', $email_all));
+            curl_setopt($curl, CURLOPT_POSTFIELDS, "X-API-KEY=$api_x_api_key&email=" . implode(',', $email_all));
 
             curl_setopt($curl, CURLOPT_FOLLOWLOCATION, FALSE);
             curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
             curl_setopt($curl, CURLOPT_TIMEOUT, 45);
-// Optional Authentication:
+            // Optional Authentication:
             curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
-            curl_setopt($curl, CURLOPT_USERPWD, "admin:1234");
-
+            curl_setopt($curl, CURLOPT_USERPWD, "$api_username:$api_password");
             curl_setopt($curl, CURLOPT_URL, $api);
-
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
             $result = curl_exec($curl);
             $student_details_data = json_decode($result);
             curl_close($curl);
 
-
-
-
-            $this->dd($student_details_data);
+            //$this->dd($student_details_data);
             if($student_details_data->status == 'success') {
                 $output = $student_details_data->message->StudentDetails;
             }
@@ -164,6 +138,12 @@ class enrolhelper {
         return $response;
     }
 
+    /**
+     * @param $data
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     public function save_enrolled($data){
         if(isset($_POST) && isset($_POST['courses']) && isset($_POST['users'])){
             global $DB;
@@ -184,6 +164,12 @@ class enrolhelper {
         }
     }
 
+    /**
+     * @param $data
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     public function verify_enrollment($data){
         if(isset($_POST) && isset($_POST['courses']) && isset($_POST['users'])){
             global $DB;
@@ -231,12 +217,18 @@ class enrolhelper {
         return $res;
     }
 
+    /**
+     * @param $data
+     */
     public function pre($data){
         print_r("<pre>");
         print_r($data);
         print_r("</pre>");
     }
 
+    /**
+     * @param $data
+     */
     public function dd($data){
         print_r("<pre>");
         print_r($data);
@@ -259,6 +251,67 @@ class enrolhelper {
             $res[$val[$col]] = (object) $val;
         }
         return $res;
+    }
+
+    public function get_courses($data){
+        if (isset($_POST)){
+            global $DB;
+            $category_id = $_POST['category_id'];
+            return $DB->get_records('course',["category"=>$category_id]);
+        }
+    }
+
+    public function get_program(){
+        global $DB;
+
+        $res = [];
+        $ums_users = $DB->get_records_sql("SELECT * FROM {enrol_ums_user} GROUP BY department_id,program_id,batch_id;");
+
+        $api_url_programs = get_config('enrol_bulk_enrollment','api_url_programs');
+        $ums_program = $this->setID($this->ums($api_url_programs),"id");
+        foreach ($ums_users as $user){
+            $res['program'][$user->program_id] = [
+                "id" => $user->program_id,
+                "label" => $user->program_id,
+                "program" => null,
+            ];
+            if (array_key_exists($user->program_id,$ums_program)){
+                $res['program'][$user->program_id]['label'] = $ums_program[$user->program_id]->title;
+                $res['program'][$user->program_id]['program'] = $ums_program[$user->program_id];
+            }
+        }
+        $this->dd();
+        return $res;
+    }
+
+    private function ums($api){
+        $api_x_api_key = get_config('enrol_bulk_enrollment','api_x_api_key');
+        $api_username = get_config('enrol_bulk_enrollment','api_username');
+        $api_password = get_config('enrol_bulk_enrollment','api_password');
+        $api_x_api_key = "X-API-KEY=".$api_x_api_key;
+        $api .= "?".$api_x_api_key;
+        $ch = curl_init($api);
+        if ($ch === false) {
+            throw new Exception('failed to initialize');
+        }
+        curl_setopt($ch,CURLOPT_CUSTOMREQUEST, "GET");
+        curl_setopt($ch,CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch,CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
+        curl_setopt($ch, CURLOPT_USERPWD, "$api_username:$api_password");
+        $d = curl_exec($ch);
+        if ($d === false) {
+            throw new Exception(curl_error($ch), curl_errno($ch));
+        }
+        curl_close($ch);
+        $output = [];
+        if ($d){
+            $d = json_decode($d);
+            if ($d->status == 'success'){
+                $output = $d->message;
+            }
+        }
+        return $output;
     }
 
 

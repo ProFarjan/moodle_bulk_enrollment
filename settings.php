@@ -60,6 +60,24 @@ if ($ADMIN->fulltree) {
         get_string('api_x_api_key_desc','enrol_bulk_enrollment'),
         "9e50f38559e4b248d3f19cbfa9f43def7f5121393f3f2ec06f3c5c0d57f0caa4"
     ));
+
+    //Other API Information
+    $settings->add(new admin_setting_heading('enrol_bulk_enrolment_others_api',
+        get_string('api_others_heading','enrol_bulk_enrollment'),
+        get_string('api_others_description','enrol_bulk_enrollment')
+    ));
+    $settings->add(new admin_setting_configtext(
+        'enrol_bulk_enrollment/api_url_programs',
+        get_string('api_url_programs','enrol_bulk_enrollment'),
+        get_string('api_url_programs_desc','enrol_bulk_enrollment'),
+        "https://api.e-dhrubo.com/students/batches/"
+    ));
+    $settings->add(new admin_setting_configtext(
+        'enrol_bulk_enrollment/api_url_batch',
+        get_string('api_url_batch','enrol_bulk_enrollment'),
+        get_string('api_url_batch_desc','enrol_bulk_enrollment'),
+        "https://api.e-dhrubo.com/students/programs"
+    ));
 }
 
 if ($hassiteconfig) {

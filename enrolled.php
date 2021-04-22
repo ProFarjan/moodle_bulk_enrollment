@@ -30,7 +30,6 @@
         redirect('/');
         exit();
     }
-
     require_login();
 
     global $DB;
@@ -44,11 +43,11 @@
     $PAGE->navbar->add(get_string("enrolled_navbar","enrol_bulk_enrollment"),"/enrol/bulk_enrollment/enrolled.php");
     $PAGE->set_heading(get_string('pluginname','enrol_bulk_enrollment'));
 
-    $courses = $enrol_helper->convert_arr(get_courses());
     $courses_category = $enrol_helper->convert_arr($DB->get_records('course_categories'));
 
-    $student_role = $DB->get_record("role",["shortname"=> "student"]);
-    $role_assignments = $DB->get_records("role_assignments", ["roleid" => $student_role->id]);
+    $program_batch = $enrol_helper->get_program();
+
+
     $all_users = $DB->get_records("user", ['deleted' => '0', 'suspended' => 0]);
     $students = $emails = [];
     foreach ($all_users as $user){
@@ -58,15 +57,12 @@
         }
     }
 
-    // get students information ums database
-    //$output = $enrol_helper->ums_std($emails);
-    $output = [];
 
     $context_data= (object)[
-        "courses" => $courses,
+        "program_id" => [],
+        "batch_id" => [],
         "students" => $students,
         "courses_category" => $courses_category,
-        "api_std" => json_encode($output),
     ];
 
     print_r($OUTPUT->header());

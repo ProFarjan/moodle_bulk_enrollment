@@ -37,4 +37,11 @@ $string['api_password'] = 'Password';
 $string['api_password_desc'] = 'Enter Password';
 $string['api_x_api_key'] = 'X-API-KEY';
 $string['api_x_api_key_desc'] = 'Enter X-API-KEY';
+// OTHERS API
+$string['api_others_heading'] = 'Other API Information';
+$string['api_others_description'] = 'UMS Helper API Like: e.g Program , Batch etc.';
+$string['api_url_programs'] = 'UMS Program API';
+$string['api_url_programs_desc'] = 'Enter UMS Program API';
+$string['api_url_batch'] = 'UMS Batch API';
+$string['api_url_batch_desc'] = 'Enter UMS Batch API';
 
