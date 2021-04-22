@@ -18,22 +18,34 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
     @template enrol_bulk_enrollment/enrolled
 
 
-    Example context (json):
+    Example courses (json):
     {
 
     }
 }}
 
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" type="text/css" href="/enrol/bulk_enrollment/css/bulk_enrollment.css">
 <link rel="stylesheet" type="text/css" href="/enrol/bulk_enrollment/css/ladda.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/10.16.3/sweetalert2.min.css" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <form action="/enrol/bulk_enrollment/request_enrolled.php" method="POST" id="bulk_enrolled">
     <div class="row course-enrolment-section">
         <div class="col-md-6">
             <h4>Courses</h4>
+
+            <div style="margin-bottom: 10px;">
+                <select class="courses_category" data-placeholder="Choose Course Category">
+                    <option value=""></option>
+                    {{#courses_category}}
+                    <option value="WY">{{name}}</option>
+                    {{/courses_category}}
+                </select>
+                <button class="btn btn-sm btn-info" type="button">Search</button>
+            </div>
+
             <div id="courses_list">
+                <hr/>
                 <input type="text" class="search" placeholder="Search..." />
                 <input type="hidden" name="courses" id="courses" />
 
@@ -41,7 +53,7 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                     {{#courses}}
                         <li class="course-item" data-id="{{id}}" onclick="toggleCourse(this)">
                             <p class="name">
-                                {{fullname}}
+                                {{fullname}} - ({{shortname}})
                             </p>
                         </li>
                     {{/courses}}
@@ -90,10 +102,12 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
     <div style="text-align: center;">
         <button class="btn btn-info btn-lg ladda-button Large" id="bulk_enrol_btn" type="submit" data-style="expand-right" style="margin-top: 15px"><span class="ladda-label">Verify</span></button>
         <button class="btn btn-primary btn-lg ladda-button Large" id="bulk_enrol_btn_submit" type="submit" data-style="expand-right" style="margin-top: 15px;display: none"><span class="ladda-label">Submit</span></button>
+        <a href="/enrol/bulk_enrollment/enrolled.php"><button class="btn btn-warning" type="button" style="margin-top: 15px;"><span class="ladda-label">Reset</span></button></a>
     </div>
 </form>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
 <script src="/enrol/bulk_enrollment/js/spin.min.js"></script>
 <script src="/enrol/bulk_enrollment/js/ladda.min.js"></script>
@@ -103,6 +117,9 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
     let btn_txt = "bulk_enrol_btn";
     let uri = "/enrol/bulk_enrollment/request_enrolled.php";
     $(function () {
+        $('.courses_category').select2({
+            'width': '78%',
+        });
         $("#bulk_enrolled").submit(function (e) {
             e.preventDefault();
             this.blur();

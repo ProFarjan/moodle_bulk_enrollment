@@ -36,14 +36,18 @@ class enrolhelper {
 
         $output = [];
         if ($api_url && $api_x_api_key){
+
+            $email_all = $this->short_email($emails);
             $api = $api_url;
-            $curl = curl_init();
+
+            /*$curl = curl_init();
             curl_setopt($curl, CURLOPT_URL, $api);
             curl_setopt($curl, CURLOPT_POST, 1);
             curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query([
                 "X-API-KEY" => $api_x_api_key,
-                "email" => implode(",",$this->short_email($emails))
+                "email" => implode(",",$email_all)
             ]));
+
             curl_setopt($curl, CURLOPT_FOLLOWLOCATION, FALSE);
             curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
             curl_setopt($curl, CURLOPT_TIMEOUT, 45);
@@ -54,7 +58,32 @@ class enrolhelper {
 
             $result = curl_exec($curl);
             $student_details_data = json_decode($result);
+            curl_close($api_url);*/
+
+            $curl = curl_init();
+
+            curl_setopt($curl, CURLOPT_POST, 1);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, "X-API-KEY=9e50f38559e4b248d3f19cbfa9f43def7f5121393f3f2ec06f3c5c0d57f0caa4&email=" . implode(',', $email_all));
+
+            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, FALSE);
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 45);
+// Optional Authentication:
+            curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
+            curl_setopt($curl, CURLOPT_USERPWD, "admin:1234");
+
+            curl_setopt($curl, CURLOPT_URL, $api);
+
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+            $result = curl_exec($curl);
+            $student_details_data = json_decode($result);
             curl_close($curl);
+
+
+
+
+            $this->dd($student_details_data);
             if($student_details_data->status == 'success') {
                 $output = $student_details_data->message->StudentDetails;
             }
@@ -69,7 +98,7 @@ class enrolhelper {
     private function short_email(array $emails){
         $short_email = [];
         foreach ($emails as $email){
-            $sm = explode($email);
+            $sm = explode("@",$email);
             $short_email[] = $sm[0];
         }
         return $short_email;
@@ -188,6 +217,18 @@ class enrolhelper {
             $emails[] = $user->email;
         }
         return $emails;
+    }
+
+    /**
+     * @param $obj_2d
+     * @return array
+     */
+    public function convert_arr($obj_2d){
+        $res = [];
+        foreach ($obj_2d as $data){
+            $res[] = (array) $data;
+        }
+        return $res;
     }
 
     public function pre($data){

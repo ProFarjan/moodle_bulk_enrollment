@@ -44,11 +44,8 @@
     $PAGE->navbar->add(get_string("enrolled_navbar","enrol_bulk_enrollment"),"/enrol/bulk_enrollment/enrolled.php");
     $PAGE->set_heading(get_string('pluginname','enrol_bulk_enrollment'));
 
-    $courses = get_courses();
-    $res = [];
-    foreach ($courses as $k => $course){
-        $res[] = (array) $course;
-    }
+    $courses = $enrol_helper->convert_arr(get_courses());
+    $courses_category = $enrol_helper->convert_arr($DB->get_records('course_categories'));
 
     $student_role = $DB->get_record("role",["shortname"=> "student"]);
     $role_assignments = $DB->get_records("role_assignments", ["roleid" => $student_role->id]);
@@ -66,8 +63,9 @@
     $output = [];
 
     $context_data= (object)[
-        "courses" => $res,
+        "courses" => $courses,
         "students" => $students,
+        "courses_category" => $courses_category,
         "api_std" => json_encode($output),
     ];
 
