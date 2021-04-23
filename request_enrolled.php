@@ -33,16 +33,17 @@
     $PAGE->set_url(new moodle_url('/enrol/bulk_enrollment/request_enrolled.php'));
 
     $enrol_helper = new enrolhelper();
-    $output = [];
+    $output = $ums = [];
     if (isset($_POST)){
         $output = $enrol_helper->verify_enrollment($_POST);
+        $ums = $output['ums'];
     }
 ?>
 
 
-<?php if (count($output) > 0): ?>
-<?php foreach ($output as $course_id => $data):?>
-<table class="table table-sm table-striped">
+<?php if (count($output['moodle']) > 0): ?>
+<?php foreach ($output['moodle'] as $course_id => $data):?>
+<table class="table table-sm">
     <thead>
         <tr>
             <th colspan="5" style="text-align: center;font-size: 22px;background: #eee;border-top: 3px solid #ddd;">
@@ -50,24 +51,67 @@
             </th>
         </tr>
         <tr>
-            <th>SL</th>
+            <th width="3%">
+                <input type="checkbox" onclick="sAll(this,'#course_<?=$course_id;?> input:checkbox');" checked/>
+            </th>
             <th>Name</th>
             <th>Email</th>
-            <th>Status</th>
+            <th>Is Active</th>
+            <th width="14%" style="text-align: right;">Status</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="course_<?=$course_id;?>">
         <?php $i = 0;?>
         <?php foreach ($data as $k => $res):?>
-            <tr>
-                <td><?=++$i;?></td>
+            <?php
+                $student = [];
+                $email = $res['user']->email;
+                if (array_key_exists($email,$ums)){
+                    $student = $ums[$email];
+                }
+            ?>
+            <?php
+                $ums_status = 'Undefined';
+                if ($student){
+                    if ($student->is_active){
+                        $ums_status = 'Active';
+                    }else{
+                        $ums_status = 'Deactivate';
+                    }
+                }
+            ?>
+            <tr class="<?= ($ums_status == 'Deactivate') ? 'bg-danger' : '' ;?>">
+                <td>
+                    <input type="checkbox" name="student[<?=$res['course']->id;?>][<?=$res['user']->id;?>]"
+                        <?php if(($res['status'] == 'already exist') || $ums_status == 'Deactivate'): ?>
+                            disabled
+                        <?php elseif($ums_status == 'Undefined'):?>
+
+                        <?php elseif($res['status'] == 'enrollable'):?>
+                            checked
+                        <?php endif;?>
+                    />
+                </td>
                 <td><?=$res['user']->firstname. " " . $res['user']->lastname;?></td>
                 <td><?=$res['user']->email;?></td>
-                <td><?=$res['status'];?></td>
+                <td>
+                    <?=$ums_status;?>
+                </td>
+                <td style="text-align: right;"><?=$res['status'];?></td>
             </tr>
         <?php endforeach; ?>
     </tbody>
 </table>
 <?php endforeach; ?>
-
+<script>
+    function sAll(elemEnt,eachAll='input:checkbox'){
+        var status = $(elemEnt).is(":checked");
+        $(eachAll).each(function(){
+            const d = $(this).attr('disabled');
+            if (d != 'disabled'){
+                $(this).prop('checked',status);
+            }
+        });
+    }
+</script>
 <?php endif ?>

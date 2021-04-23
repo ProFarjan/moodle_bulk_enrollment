@@ -67,7 +67,7 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                     <select class="program_id select2" id="program_id" data-placeholder="Choose Program">
                         <option value=""></option>
                         {{#programs}}
-                        <option value="{{id}}">{{label}}</option>
+                        <option value="{{id}}">{{title}}</option>
                         {{/programs}}
                     </select>
                 </label>
@@ -131,9 +131,10 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
         valueNames: [
             'full_name',
             'student_email',
+            'dept',
             {data: ['id','email','name'] },
         ],
-        item: '<li class="user-item student-${id} col-xs-12" onclick="toggleUser(this)"><p class="full_name name col-xs-5"></p><p class="student_email email col-xs-7"></p><p class="dept col-xs-12"></p></li>',
+        item: '<li class="user-item student-${id} col-xs-12" onclick="toggleUser(this)"><p class="full_name name col-xs-5"></p><p class="student_email email col-xs-7" style="text-align: right"></p><p class="dept col-xs-12" style="font-weight: 400;">CSE</p></li>',
     };
     let options_course_list = {
         valueNames: [
@@ -162,11 +163,13 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                 success: function (res) {
                     if (res){
                         let bs = $('#batch_id');
+                        bs.append(new Option('','',true,true));
                         let batches = JSON.parse(res);
                         for (let batch of batches){
                             const option = new Option(batch.batch_title,batch.batch_title,true,true);
                             bs.append(option);
                         }
+                        bs.val('');
                         bs.trigger('change');
                     }
                 },
@@ -290,7 +293,7 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
             l.start();
             let program_id = $("#program_id").val().trim();
             let batch_id = $("#batch_id").val().trim();
-            if (program_id && batch_id){
+            if (program_id){
                 $.ajax({
                     url: "/enrol/bulk_enrollment/api.php",
                     data: {
@@ -304,15 +307,16 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                             let students_fm_list = [];
                             for (let i in students){
                                 let student = students[i];
-                                if (!exists_std.includes(student.user_id)){
+                                if (!exists_std.includes(student.id)){
                                     students_fm_list.push({
                                         full_name: student.firstname + ' ' + student.lastname,
                                         student_email: student.email,
                                         name: student.firstname + ' ' + student.lastname,
                                         email: student.email,
-                                        id: student.user_id,
+                                        dept: student.program_id + ' (' + student.batch_id + ')',
+                                        id: student.id,
                                     });
-                                    exists_std.push(student.user_id);
+                                    exists_std.push(student.id);
                                 }
                             }
                             userList.add(students_fm_list);
@@ -334,7 +338,7 @@ along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
                 Swal.fire({
                     icon: 'warning',
                     title: 'empty...',
-                    text: "Please Select Any Program & Batch",
+                    text: "Please Select Any Program",
                 });
                 setTimeout(()=>{
                     l.stop();

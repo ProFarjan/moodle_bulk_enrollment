@@ -145,23 +145,47 @@ class enrolhelper {
      * @throws dml_exception
      */
     public function save_enrolled($data){
-        if(isset($_POST) && isset($_POST['courses']) && isset($_POST['users'])){
+        if(isset($_POST) && isset($_POST['student']) && isset($_POST['users'])){
             global $DB;
-            $courses = $_POST['courses'];
-            $users = $_POST['users'];
+            $students = $_POST['student'];
+
+            $cu = $this->get_student_output($students);
+            $courses = implode(',',$cu['courses']);
+            $users = implode(',',$cu['students']);
 
             $courses = $this->setID($DB->get_records_sql("SELECT * FROM {course} WHERE id IN ($courses)"));
             $users = $this->setID($DB->get_records_sql("SELECT * FROM {user} WHERE deleted = 0 and id IN ($users)"));
 
             $res = [];
-            foreach ($courses as $course){
-                $plugin_instance = $DB->get_record("enrol", array('courseid'=> $course->id, 'enrol'=>'manual'));
-                foreach ($users as $user){
-                    $res[$course->id][] = $this->check_enrol($course,$user,$plugin_instance->roleid);
+            foreach ($students as $course_id => $student){
+                $plugin_instance = $DB->get_record("enrol", array('courseid'=> $course_id, 'enrol'=>'manual'));
+                $course = $courses[$course_id];
+                foreach ($student as $id => $status){
+                    $user = $users[$id];
+                    $res[$course_id][] = $this->check_enrol($course,$user,$plugin_instance->roleid);
                 }
             }
             return $res;
         }
+    }
+
+    /**
+     * @param array $students
+     * @return array
+     */
+    private function get_student_output(array $students): array
+    {
+        $res = [
+            'courses' => [],
+            'students' => [],
+        ];
+        foreach ($students as $course => $student){
+            $res['courses'][$course] = $course;
+            foreach ($student as $id => $status){
+                $res['students'][$id] = $id;
+            }
+        }
+        return $res;
     }
 
     /**
@@ -180,13 +204,14 @@ class enrolhelper {
             $users = $this->setID($DB->get_records_sql("SELECT * FROM {user} WHERE deleted = 0 and id IN ($users)"));
 
             $emails = $this->get_emails($users);
-            $api_data = $this->ums_std($emails);
+            $api_data = $this->setID($this->ums_std($emails),"username");
 
             $res = [];
+            $res['ums'] = $api_data;
             foreach ($courses as $course){
                 $plugin_instance = $DB->get_record("enrol", array('courseid'=> $course->id, 'enrol'=>'manual'));
                 foreach ($users as $user){
-                    $res[$course->id][] = $this->check_enrol($course,$user,$plugin_instance->roleid,false);
+                    $res['moodle'][$course->id][] = $this->check_enrol($course,$user,$plugin_instance->roleid,false);
                 }
             }
             return $res;
@@ -262,26 +287,14 @@ class enrolhelper {
     }
 
     public function get_program(){
-        global $DB;
-
         $res = [];
-        $ums_users = $DB->get_records_sql("SELECT * FROM {enrol_ums_user} GROUP BY department_id,program_id,batch_id;");
-
-        $api_url_programs = get_config('enrol_bulk_enrollment','api_url_programs');
-        $ums_program = $this->setID($this->ums($api_url_programs),"id");
-        foreach ($ums_users as $user){
-            $res[$user->program_id] = [
-                "id" => $user->program_id,
-                "label" => $user->program_id,
-                "program" => null,
-            ];
-            if (array_key_exists($user->program_id,$ums_program)){
-                $res[$user->program_id]['label'] = $ums_program[$user->program_id]->title;
-                $res[$user->program_id]['program'] = $ums_program[$user->program_id];
-            }
+        $programs = $_SESSION['programs'];
+        if (!$programs){
+            $api_url_programs = get_config('enrol_bulk_enrollment','api_url_programs');
+            $programs = $this->ums($api_url_programs);
+            $_SESSION['programs'] = $programs;
         }
-        sort($res);
-        return $res;
+        return $programs;
     }
 
     /**
@@ -301,13 +314,31 @@ class enrolhelper {
     public function get_students($data){
         $program = $data['program'];
         $batch = $data['batch'];
-        $students = [];
-        if ($program && $batch){
+        $res = [];
+        if ($program){
             global $DB;
-            $sql = "SELECT ums.*,u.* FROM {enrol_ums_user} ums INNER JOIN {user} u ON ums.user_id = u.id WHERE ums.program_id = '$program' and ums.batch_id = '$batch' ORDER BY u.firstname";
+
+            $get_programs = $_SESSION['programs'];
+            if (!$get_programs){
+                $get_programs = [];
+            }
+            $get_programs = $this->setID($get_programs);
+
+            $batch_sql = '';
+            if (!empty($batch)){
+                $batch_sql = "and ums.batch_id = '$batch'";
+            }
+
+            $sql = "SELECT u.*,ums.program_id,ums.batch_id FROM {user} u LEFT JOIN {enrol_ums_user} ums ON u.id = ums.user_id WHERE ums.program_id = '$program' $batch_sql ORDER BY u.firstname";
             $students = $DB->get_records_sql($sql);
+            foreach ($students as $student){
+                if (array_key_exists($student->program_id,$get_programs)){
+                    $student->program_id = $get_programs[$student->program_id]->title;
+                }
+                $res[] = $student;
+            }
         }
-        return $students;
+        return $res;
     }
 
     /**

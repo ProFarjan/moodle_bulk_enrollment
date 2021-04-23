@@ -43,7 +43,7 @@
         $output = $enrol_helper->get_batches($_POST['program_id']);
     }
 
-    if (isset($_POST['program']) && !empty($_POST['program']) && !empty($_POST['batch']) && ($_SERVER['REQUEST_METHOD'] == 'POST')){
+    if (isset($_POST['batch']) && !empty($_POST['program']) && ($_SERVER['REQUEST_METHOD'] == 'POST')){
         $output = $enrol_helper->get_students($_POST);
     }
 
