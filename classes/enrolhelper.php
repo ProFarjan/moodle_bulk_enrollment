@@ -57,7 +57,7 @@ class enrolhelper {
             $student_details_data = json_decode($result);
             curl_close($curl);
 
-            $this->dd($student_details_data);
+            //$this->dd($student_details_data);
             if($student_details_data->status == 'success') {
                 $output = $student_details_data->message->StudentDetails;
             }
@@ -284,6 +284,11 @@ class enrolhelper {
         return $res;
     }
 
+    /**
+     * @param $program_id
+     * @return array
+     * @throws dml_exception
+     */
     public function get_batches($program_id){
         $api_url_batch = get_config('enrol_bulk_enrollment','api_url_batch');
         if (substr($api_url_batch,-1) != '/'){
@@ -293,6 +298,23 @@ class enrolhelper {
         return $this->ums($api_url_batch);
     }
 
+    public function get_students($data){
+        $program = $data['program'];
+        $batch = $data['batch'];
+        $students = [];
+        if ($program && $batch){
+            global $DB;
+            $sql = "SELECT ums.*,u.* FROM {enrol_ums_user} ums INNER JOIN {user} u ON ums.user_id = u.id WHERE ums.program_id = '$program' and ums.batch_id = '$batch' ORDER BY u.firstname";
+            $students = $DB->get_records_sql($sql);
+        }
+        return $students;
+    }
+
+    /**
+     * @param $api
+     * @return array
+     * @throws dml_exception
+     */
     private function ums($api){
         $api_x_api_key = get_config('enrol_bulk_enrollment','api_x_api_key');
         $api_username = get_config('enrol_bulk_enrollment','api_username');
