@@ -57,7 +57,7 @@ class enrolhelper {
             $student_details_data = json_decode($result);
             curl_close($curl);
 
-            //$this->dd($student_details_data);
+            // $this->dd($student_details_data);
             if($student_details_data->status == 'success') {
                 $output = $student_details_data->message->StudentDetails;
             }
@@ -324,12 +324,16 @@ class enrolhelper {
             }
             $get_programs = $this->setID($get_programs);
 
-            $batch_sql = '';
+            $wh_sql = '1';
+            if ($program != 'all'){
+                $wh_sql .= " and ums.program_id = '$program'";
+            }
             if (!empty($batch)){
-                $batch_sql = "and ums.batch_id = '$batch'";
+                $wh_sql .= " and ums.batch_id = '$batch'";
             }
 
-            $sql = "SELECT u.*,ums.program_id,ums.batch_id FROM {user} u LEFT JOIN {enrol_ums_user} ums ON u.id = ums.user_id WHERE ums.program_id = '$program' $batch_sql ORDER BY u.firstname";
+            $sql = "SELECT u.*,ums.program_id,ums.batch_id FROM {user} u LEFT JOIN {enrol_ums_user} ums ON u.id = ums.user_id WHERE $wh_sql ORDER BY u.firstname";
+
             $students = $DB->get_records_sql($sql);
             foreach ($students as $student){
                 if (array_key_exists($student->program_id,$get_programs)){
