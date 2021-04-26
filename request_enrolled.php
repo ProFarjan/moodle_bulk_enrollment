@@ -56,8 +56,8 @@
             </th>
             <th>Name</th>
             <th>Email</th>
-            <th>Is Active</th>
-            <th width="14%" style="text-align: right;">Status</th>
+            <th>Status</th>
+            <th width="14%" style="text-align: right;">Output</th>
         </tr>
     </thead>
     <tbody id="course_<?=$course_id;?>">
@@ -71,21 +71,38 @@
                 }
             ?>
             <?php
-                $ums_status = 'Undefined';
+                $ums_status = 'Not_Sync';
                 if ($student){
-                    if ($student->is_active){
-                        $ums_status = 'Active';
-                    }else{
-                        $ums_status = 'Deactivate';
+                    switch ($student->student_status){
+                        case 0:
+                            $ums_status = 'Active';
+                            break;
+                        case 4:
+                            $ums_status = 'Graduated';
+                            break;
+                        case 5:
+                            $ums_status = 'Suspended';
+                            break;
+                        case 6:
+                            $ums_status = 'Inactive';
+                            break;
+                        case 7:
+                            $ums_status = 'Dismissed';
+                            break;
+                        case 8:
+                            $ums_status = 'Dropped';
+                            break;
+                        default:
+                            $ums_status = 'Undefined';
                     }
                 }
             ?>
             <tr class="<?= ($ums_status == 'Deactivate') ? 'bg-danger' : '' ;?>">
                 <td>
                     <input type="checkbox" name="student[<?=$res['course']->id;?>][<?=$res['user']->id;?>]"
-                        <?php if(($res['status'] == 'already exist') || $ums_status == 'Deactivate'): ?>
+                        <?php if(($res['status'] == 'already exist') || in_array($ums_status,['Suspended','Inactive','Dismissed','Dropped'])): ?>
                             disabled
-                        <?php elseif($ums_status == 'Undefined'):?>
+                        <?php elseif($ums_status == 'Not_Sync'):?>
 
                         <?php elseif($res['status'] == 'enrollable'):?>
                             checked

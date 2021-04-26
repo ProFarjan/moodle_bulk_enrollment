@@ -57,7 +57,7 @@ class enrolhelper {
             $student_details_data = json_decode($result);
             curl_close($curl);
 
-            // $this->dd($student_details_data);
+            //$this->dd($student_details_data);
             if($student_details_data->status == 'success') {
                 $output = $student_details_data->message->StudentDetails;
             }

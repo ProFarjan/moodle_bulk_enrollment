@@ -19,11 +19,9 @@
  *
  *
  * @package    enrol_bulk_enrollment
- * @category    admin
  * @copyright  2021 World University of Bangladesh (CIS)
  * @license    https://license.elearning.com.bd/ GNU GPL v3 or later
- * @author     CIS (https://cis.com/)
- * @author     Farjan Hasan <farjan@wub.edu.bd>
+ * @author     CIS (http://computinginfoservices.com/)
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -36,6 +34,7 @@ if ($ADMIN->fulltree) {
         get_string('api_heading','enrol_bulk_enrollment'),
         get_string('api_description','enrol_bulk_enrollment')
     ));*/
+
     $settings->add(new admin_setting_configtext(
        'enrol_bulk_enrollment/api_url',
         get_string('api_url','enrol_bulk_enrollment'),
