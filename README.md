@@ -15,4 +15,8 @@ https://wub.edu.bd/
 * git clone https://github.com/ProFarjan/moodle_bulk_enrollment.git
 * navigate on your moodle page to admin --> notifivations and follow the instructions
 
+# REST API Instruction
+
+
+
 
