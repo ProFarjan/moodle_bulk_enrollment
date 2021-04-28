@@ -19,7 +19,7 @@
  *
  * @package   enrol_bulk_enrollment
  * @copyright 2021 World University of Bangladesh (CIS)
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license   https://opensource.org/licenses/MIT GNU GPL v3 or later
  */
 
 class enrolhelper {
