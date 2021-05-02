@@ -28,5 +28,5 @@ $plugin->version   = 2021042000;        // The current plugin version (Date: YYY
 $plugin->requires  = 2017110800;        // Requires this Moodle version
 $plugin->component = 'enrol_bulk_enrollment';    // Full name of the plugin (used for diagnostics)
 
-$plugin->cron = 0;
+$plugin->maturity = MATURITY_STABLE;
 $plugin->release = 'v1.0.0';

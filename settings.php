@@ -77,6 +77,12 @@ if ($ADMIN->fulltree) {
         get_string('api_url_batch_desc','enrol_bulk_enrollment'),
         "https://api.e-dhrubo.com/students/batches/"
     ));
+    $settings->add(new admin_setting_configtext(
+        'enrol_bulk_enrollment/api_ums_sync',
+        get_string('api_ums_sync','enrol_bulk_enrollment'),
+        get_string('api_ums_sync_desc','enrol_bulk_enrollment'),
+        ""
+    ));
 }
 
 if ($hassiteconfig) {

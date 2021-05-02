@@ -380,5 +380,73 @@ class enrolhelper {
         return $output;
     }
 
+    /**
+     * @param array $data
+     * @return array
+     * @throws dml_exception
+     */
+    public function get_program_wise_students(array $data): array {
+        $program_id = $data['sync_program'];
+        $res = [];
+        if ($program_id){
+            global $DB;
+            $sql = "SELECT u.*,ums.user_id as sync FROM {user} u left JOIN {enrol_ums_user} ums ON u.id = ums.user_id WHERE u.username like '$program_id%' ORDER BY u.firstname";
+            $res = $DB->get_records_sql($sql);
+        }
+        return $res;
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    public function get_synchronization_data(array $data): array{
+        global $DB;
+        $output = [];
+        $users = $data['user'];
+        if (is_array($users) && count($users) > 0){
+            $sql = "SELECT * FROM {user} WHERE id IN (".implode(',',array_keys($users)).")";
+            $users = $this->setID($DB->get_records_sql($sql),'id');
+            if ($users){
+                $users_id = array_keys($users);
+                $ums_data = $this->get_ums_sync_data($users_id);
+                $DB->insert_records("enrol_ums_user",$ums_data);
+                $output['sync'] = $ums_data;
+                $output['users'] = $users;
+            }
+        }
+        return $output;
+    }
+
+    private function get_ums_sync_data($users_id){
+        $output = [];
+
+        $api = get_config('enrol_bulk_enrollment','api_ums_sync');
+        $api_username = get_config('enrol_bulk_enrollment','api_username');
+        $api_password = get_config('enrol_bulk_enrollment','api_password');
+        $api_x_api_key = get_config('enrol_bulk_enrollment','api_x_api_key');
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, "X-API-KEY=$api_x_api_key&email=" . implode(',', $users_id));
+
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, FALSE);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 45);
+        // Optional Authentication:
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
+        curl_setopt($curl, CURLOPT_USERPWD, "$api_username:$api_password");
+        curl_setopt($curl, CURLOPT_URL, $api);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $result = curl_exec($curl);
+        $student_details_data = json_decode($result);
+        curl_close($curl);
+
+        //$this->dd($student_details_data);
+        if($student_details_data->status == 'success') {
+            $output = $student_details_data->StudentDetails;
+        }
+        return $output;
+    }
 
 }

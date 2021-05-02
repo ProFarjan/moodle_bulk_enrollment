@@ -47,6 +47,14 @@
         $output = $enrol_helper->get_students($_POST);
     }
 
+    if (isset($_POST['sync_program']) && !empty($_POST['sync_program']) && ($_SERVER['REQUEST_METHOD'] == 'POST')){
+        $output = $enrol_helper->get_program_wise_students($_POST);
+    }
+
+    if (isset($_POST['user']) && !empty($_POST['user']) && ($_SERVER['REQUEST_METHOD'] == 'POST')){
+        $output = $enrol_helper->get_synchronization_data($_POST);
+    }
+
     echo json_encode($output);
 
 ?>
