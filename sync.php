@@ -44,18 +44,6 @@
     $PAGE->set_heading(get_string('enrolled_sync','enrol_bulk_enrollment'));
 
     $programs = $enrol_helper->get_program();
-    /*$programs = [
-        [
-            'code' => '01',
-            'title' => "Computer Science & Engineering",
-        ],[
-            'code' => '02',
-            'title' => "Business Administrative",
-        ],[
-            'code' => '03',
-            'title' => "Electrical & Electronics Engineering",
-        ],
-    ];*/
     $context_data = (object)[
         "programs" => $programs,
     ];

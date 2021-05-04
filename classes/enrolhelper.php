@@ -410,8 +410,8 @@ class enrolhelper {
             if ($users){
                 $users_id = array_keys($users);
                 $ums_data = $this->get_ums_sync_data($users_id);
-                $DB->insert_records("enrol_ums_user",$ums_data);
-                $output['sync'] = $ums_data;
+//                $DB->insert_records("enrol_ums_user",$ums_data);
+//                $output['sync'] = $ums_data;
                 $output['users'] = $users;
             }
         }
@@ -428,7 +428,7 @@ class enrolhelper {
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, "X-API-KEY=$api_x_api_key&email=" . implode(',', $users_id));
+        curl_setopt($curl, CURLOPT_POSTFIELDS, "X-API-KEY=$api_x_api_key&users=" . implode(',', $users_id));
 
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, FALSE);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
